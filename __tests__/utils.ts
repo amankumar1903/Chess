@@ -24,7 +24,7 @@ export function fileToString(filename: string) {
    * newline after reading (w/ slice).
    */
   return readFileSync(join(__dirname, './', filename))
-    .toString()
+    .toString().replace(/\r/g, '')
     .slice(0, -1)
 }
 
