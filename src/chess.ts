@@ -3421,6 +3421,44 @@ export class Chess960 extends Chess {
   }
 
   /**
+   * Override move to handle King-to-Rook castling notation in Chess960
+   */
+  override move(
+    move: string | { from: string; to: string; promotion?: string } | null,
+    { strict = false }: { strict?: boolean } = {},
+  ): Move {
+    if (typeof move === 'object' && move !== null && 'from' in move && 'to' in move) {
+      const fromOx88 = Ox88[move.from as Square]
+      const toOx88 = Ox88[move.to as Square]
+      
+      if (fromOx88 !== undefined && toOx88 !== undefined) {
+        const piece = this._board[fromOx88]
+        const targetPiece = this._board[toOx88]
+        
+        // If king moves to its own rook, it's a castling attempt
+        if (
+          piece && piece.type === KING &&
+          targetPiece && targetPiece.type === ROOK &&
+          piece.color === targetPiece.color
+        ) {
+          const moves = this._moves()
+          for (const m of moves) {
+            if (m.flags & (BITS.KSIDE_CASTLE | BITS.QSIDE_CASTLE)) {
+               if (m.from === fromOx88 && m.rookFrom === toOx88) {
+                  // Change 'to' to the king's actual destination
+                  move = { ...move, to: algebraic(m.to) }
+                  break
+               }
+            }
+          }
+        }
+      }
+    }
+    
+    return super.move(move, { strict })
+  }
+
+  /**
    * Override _moves to implement Chess960 castling logic
    * FIX: Temporarily disable castling rights to prevent base class from generating invalid castling moves
    */
