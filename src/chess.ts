@@ -2944,15 +2944,27 @@ export class Chess960 extends Chess {
    * const chess = new Chess960()
    */
   constructor(
-    position?: number | string,
-    options: { skipValidation?: boolean } = {}
+    position?: number | string | { skipValidation?: boolean; random?: boolean },
+    options?: { skipValidation?: boolean; random?: boolean }
   ) {
     let fen: string
+    let opts = options || {}
+
+    // Handle case where first argument is an options object
+    if (typeof position === 'object' && position !== null) {
+      opts = position
+      position = undefined
+    }
 
     if (position === undefined) {
-      // Generate random position
-      const randomPosition = Math.floor(Math.random() * 960)
-      fen = Chess960.generatePositionFen(randomPosition)
+      if (opts.random) {
+        // Generate random position
+        const randomPosition = Math.floor(Math.random() * 960)
+        fen = Chess960.generatePositionFen(randomPosition)
+      } else {
+        // Default to standard chess position (518)
+        fen = Chess960.generatePositionFen(518)
+      }
     } else if (typeof position === 'number') {
       // Generate from position number
       if (position < 0 || position >= 960) {
@@ -2963,8 +2975,7 @@ export class Chess960 extends Chess {
       // Use provided FEN string
       fen = position
     }
-
-    super(fen, options)
+    super(fen, opts)
     this._initializeRooks()
   }
 
